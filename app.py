@@ -22,7 +22,7 @@ except:
         locale.setlocale(locale.LC_ALL, 'C')
 
 st.set_page_config(page_title="Janaina Runner", page_icon="icon.png", layout="wide")
-st.logo('logo4.png', size = 'large', icon_image='logop.png',)
+st.logo('nina.png', size = 'large', icon_image='nina.png',)
 
 
 def Dashboard():

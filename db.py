@@ -220,7 +220,7 @@ def get_maratonas_janaina():
         return pd.DataFrame()
 
 
-def maratonas_cadastrar_janaina(nome, data,local, tempo, link, mapa, documentos, gpx, id):
+def maratonas_cadastrar_janaina(nome, data,local, tempo, id):
     db = conexao()
     maratonas = db["maratonas_janaina"]
     data_maratonas_cadastrar = maratonas.insert_one({
@@ -228,17 +228,13 @@ def maratonas_cadastrar_janaina(nome, data,local, tempo, link, mapa, documentos,
         "data": data,
         "local": local,
         "tempo": tempo,
-        "mapa": mapa  ,
-        "link": link  ,
-        "documentos": documentos ,
-        "gpx": gpx ,
         "id_strava": id
     })
     return data_maratonas_cadastrar  
 
-def maratonas_editar_janaina(id, nome, data, local, tempo, link, documentos, gpx, id_strava):
+def maratonas_editar_janaina(id, nome, data, local, tempo, id_strava):
     db = conexao()
     maratonas = db["maratonas_janaina"]
-    maratonas.update_one({"_id": ObjectId(id)}, {"$set": {"nome": nome, "data": data, "local": local, "tempo": tempo, "link": link, "documentos": documentos, "gpx": gpx, "id_strava": id_strava}})
+    maratonas.update_one({"_id": ObjectId(id)}, {"$set": {"nome": nome, "data": data, "local": local, "tempo": tempo,   "id_strava": id_strava}})
     return maratonas
 

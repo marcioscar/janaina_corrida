@@ -21,47 +21,8 @@ from db import  get_maratonas_janaina  , maratonas_cadastrar_janaina, maratonas_
 # Carregar variáveis de ambiente
 load_dotenv()
 
-# 🔑 Configuração das credenciais
-SCOPES = ['https://www.googleapis.com/auth/drive']
-SERVICE_ACCOUNT_INFO = json.loads(os.getenv('GOOGLE_CREDENTIALS'))
-credentials = service_account.Credentials.from_service_account_info(
-    SERVICE_ACCOUNT_INFO, scopes=SCOPES)
 
-service = build('drive', 'v3', credentials=credentials)
 
-FOLDER_ID = '1IJe_AxeyxMmb0XWOo3Cj1r4r-_aMl0sQ' # biblioteca
-
-# 🚀 Função para upload no Drive
-def upload_arquivo_drive(file, file_name):
-    nome_arquivo = datetime.now().strftime("%d-%m-%Y") + '_' + file_name
-    file_metadata = {'name': nome_arquivo,
-                     'parents': [FOLDER_ID]
-                     }
-
-    media = MediaIoBaseUpload(
-        io.BytesIO(file.read()), mimetype=file.type, resumable=True
-    )
-
-    uploaded_file = service.files().create(
-        body=file_metadata,
-        media_body=media,
-        fields='id'
-    ).execute()
-
-    file_id = uploaded_file.get('id')
-
-    # 🔓 Permissão pública
-    service.permissions().create(
-        fileId=file_id,
-        body={'type': 'anyone', 'role': 'reader'}
-    ).execute()
-
-    # 🔗 Link público
-    link = f"https://drive.google.com/file/d/{file_id}/view?usp=sharing"
-
-    return link
-
-server_url = "http://marcioscar.tplinkdns.com:5000/"
 
 def tempo_para_minutos(tempo_str):
     try:
@@ -153,10 +114,9 @@ if pointsData:  # Só mostra o globo se houver pontos
 
 @st.dialog("Nova Maratona")
 def maratona():
-    file_url = ''
+    
     link = ''
-    mapa = ''
-    file_url_gpx = ''
+    
     with st.form("Maratona"):
         nome = st.text_input("Nome")
         col1, col2 = st.columns(2)
@@ -166,21 +126,13 @@ def maratona():
             local = st.text_input("Local (longitude, latitude)")
         with col2:
             tempo = st.text_input("Tempo")
-            link = st.text_input("Link")
-            mapa = st.text_input("Mapa")
+            
          #enviar recibo de pagamento
-        uploaded_file = st.file_uploader("Documentos")
-        if uploaded_file:
-            file_url = upload_arquivo_drive(uploaded_file, 'maratona_' + uploaded_file.name)
-            st.success("Arquivo enviado com sucesso!")
-        gpx_file = st.file_uploader("GPX")            
-        if gpx_file:
-            file_url_gpx = upload_arquivo_drive(gpx_file, 'maratona_gpx_' + gpx_file.name)
-            st.success("Arquivo enviado com sucesso!")              
+                   
 
         submitted = st.form_submit_button("Cadastrar")
         if submitted:    
-            maratonas_cadastrar_janaina(nome, data,local, tempo, link, mapa, file_url, file_url_gpx, id)
+            maratonas_cadastrar_janaina(nome, data,local, tempo, id)
             st.success("Maratona cadastrada com sucesso! sem arquivo")
             st.rerun()        
 
@@ -231,19 +183,13 @@ st.altair_chart(chart, use_container_width=True)
 maratonas_df = dataframe_explorer(visivel, case=False )
 edited_df = st.data_editor(
     maratonas_df, 
-    column_order=[ 'detalhes',"nome", "data", "tempo", "link", 'documentos', 'gpx'], 
+    column_order=[ 'detalhes',"nome", "data", "tempo"], 
     column_config={
         "data": st.column_config.DateColumn(
             "Data", format="DD/MM/YYYY",
         ),
-        "link": st.column_config.LinkColumn(
-            "🔗", display_text="🔗",
-            disabled=True
-        ),
-        "documentos": st.column_config.LinkColumn(
-            "Documentos", display_text="📂",
-            disabled=True
-        ),
+       
+       
         "tempo": st.column_config.TimeColumn(
             "Tempo", 
         ),
@@ -251,10 +197,7 @@ edited_df = st.data_editor(
             "Detalhes",
             default=False,
         ),
-        "gpx": st.column_config.LinkColumn(
-            "GPX", display_text="🗺️",
-            disabled=True
-        )
+      
     },
     hide_index=True, 
     height=300, 
@@ -270,18 +213,12 @@ def editar_maratona(linha_selecionada):
         data = datetime.combine(st.date_input('Data', value=linha_selecionada['data'].iloc[0], format="DD/MM/YYYY"), datetime.min.time())
         local = st.text_input("Local", value=linha_selecionada['local'].iloc[0])
         tempo = st.text_input("Tempo", value=linha_selecionada['tempo'].iloc[0])
-        link = st.text_input("Link", value=linha_selecionada['link'].iloc[0])
+        
         id_strava = st.text_input("Id Strava", value=linha_selecionada['id_strava'].iloc[0])
-        uploaded_file = st.file_uploader("Documentos")
-        if uploaded_file:
-            file_url = upload_arquivo_drive(uploaded_file, 'maratona_' + uploaded_file.name)
-            st.success("Arquivo enviado com sucesso!")
-        gpx_file = st.file_uploader("GPX")
-        if gpx_file:
-            file_url_gpx = upload_arquivo_drive(gpx_file, 'maratona_gpx_' + gpx_file.name)
-            st.success("Arquivo enviado com sucesso!")            
+        
+                 
         if st.button("Salvar", type='secondary', icon="💾"):
-            maratonas_editar_janaina(linha_selecionada['_id'].iloc[0], nome, data, local, tempo, link, file_url, file_url_gpx, id_strava)
+            maratonas_editar_janaina(linha_selecionada['_id'].iloc[0], nome, data, local, tempo, id_strava)
             st.success("Maratona editada com sucesso!")
             st.rerun()
     else:
